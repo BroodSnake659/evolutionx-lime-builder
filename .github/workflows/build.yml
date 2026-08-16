@@ -5,22 +5,30 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Free Up Disk Space
+    - name: Clean Up Disk Space
       run: |
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
         sudo rm -rf /opt/ghc
         sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
-    - name: Set up Build Environment
+    - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.1-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
+        sudo apt-get install -y \
+          git-lfs gnupg flex bison gperf squashfs-tools build-essential \
+          zip curl ccache zlib1g-dev openjdk-11-jre openjdk-11-jdk \
+          pngcrush schedtool libxml2 libxml2-utils xsltproc lzop \
+          libc6-dev g++-multilib lib32z1-dev gcc-multilib maven tmux \
+          screen w3m ncftp rsync libssl-dev libncurses6 lib32ncurses6-dev \
+          libsdl2-dev libtinfo-dev bc libreadline-dev lib32readline-dev
 
     - name: Install Repo Tool
       run: |
@@ -31,36 +39,32 @@ jobs:
 
     - name: Initialize Evolution X Source
       run: |
-        mkdir android && cd android
-        git config --global user.name "BroadSnake659"
-        git config --global user.email "git@github.com"
-        repo init -u https://github.com -b udc --git-lfs --depth=1
+        mkdir -p ~/workspace
+        cd ~/workspace
+        git config --global user.name "BroodSnake659"
+        git config --global user.email "broodsnake@example.com"
+        repo init -u https://github.com/Evolution-X/manifest -b bq2 --git-lfs
 
     - name: Clone Lime Device Trees
       run: |
-        cd android
-        git clone https://github.com -b udc device/xiaomi/lime
-        git clone https://github.com -b udc kernel/xiaomi/lime
-        git clone https://github.com -b udc vendor/xiaomi/lime
+        cd ~/workspace
+        git clone https://github.com -b bq2 device/xiaomi/sm8450-common || true
 
     - name: Set up CCache Engine
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        max-size: "50G"
-        key: lime-evolution-ccache
+      run: |
+        echo "USE_CCACHE=1" >> $GITHUB_ENV
+        echo "CCACHE_EXEC=/usr/bin/ccache" >> $GITHUB_ENV
+        ccache -M 50G
 
     - name: Compile Evolution X ROM
       run: |
-        cd android
-        source build/envsetup.sh
-        export USE_CCACHE=1
-        export CCACHE_EXEC=/usr/bin/ccache
-        ccache -M 50G
-        lunch evolution_lime-userdebug
+        cd ~/workspace
+        . build/envsetup.sh
+        lunch lineage_lime-userdebug || lunch evolution_lime-userdebug
         m evolution -j$(nproc --all)
 
     - name: Upload Flashable ROM Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: EvolutionX-Lime-Build
-        path: android/out/target/product/lime/evolution_*.zip
+        name: EvolutionX-Lime-Flashable
+        path: ~/workspace/out/target/product/lime/*.zip
