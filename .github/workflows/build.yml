@@ -29,23 +29,22 @@ jobs:
 
     - name: Install Repo Tool
       run: |
-        mkdir -p ~/bin
-        curl https://googleapis.com > ~/bin/repo
-        dos2unix ~/bin/repo
-        chmod a+x ~/bin/repo
-        ln -sf ~/bin/repo /usr/bin/repo
+        mkdir -p /usr/local/bin
+        curl https://googleapis.com > /usr/local/bin/repo
+        dos2unix /usr/local/bin/repo
+        chmod a+x /usr/local/bin/repo
 
     - name: Initialize Evolution X Source
       run: |
-        mkdir -p ~/workspace
-        cd ~/workspace
+        mkdir -p /github/workspace/android_build
+        cd /github/workspace/android_build
         git config --global user.name "BroodSnake659"
         git config --global user.email "broodsnake@example.com"
-        repo init -u https://github.com -b eleven --git-lfs
+        /usr/local/bin/repo init -u https://github.com -b eleven --git-lfs
 
     - name: Clone Lime Device Trees
       run: |
-        cd ~/workspace
+        cd /github/workspace/android_build
         git clone https://github.com -b eleven device/xiaomi/lime || true
 
     - name: Set up CCache Engine
@@ -56,7 +55,7 @@ jobs:
 
     - name: Compile Evolution X ROM
       run: |
-        cd ~/workspace
+        cd /github/workspace/android_build
         . build/envsetup.sh
         lunch evolution_lime-userdebug || lunch lineage_lime-userdebug
         mka bacon -j$(nproc --all)
@@ -65,4 +64,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: EvolutionX-Lime-Android11-Flashable
-        path: ~/workspace/out/target/product/lime/*.zip
+        path: /github/workspace/android_build/out/target/product/lime/*.zip
