@@ -5,46 +5,48 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-      options: --privileged
+    runs-on: ubuntu-22.04
 
     steps:
-    - name: Set up Environment and Prerequisites
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Clean Up Disk Space
       run: |
-        export DEBIAN_FRONTEND=noninteractive
-        apt-get update
-        apt-get install -y tzdata
-        apt-get install -y \
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
           git-lfs gnupg flex bison gperf squashfs-tools build-essential \
           zip curl ccache zlib1g-dev openjdk-11-jre openjdk-11-jdk \
           pngcrush schedtool libxml2 libxml2-utils xsltproc lzop \
           libc6-dev g++-multilib lib32z1-dev gcc-multilib maven tmux \
           screen w3m ncftp rsync libssl-dev libncurses5 lib32ncurses5-dev \
-          libsdl1.2-dev libtinfo-dev bc libreadline-dev lib32readline-dev python2 python3 python-is-python3 dos2unix
+          libtinfo5 bc libreadline-dev lib32readline-dev python3 python3-pip
 
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-
-    - name: Install Repo Tool
+    - name: Install Repo Tool Properly
       run: |
-        mkdir -p /usr/local/bin
-        curl https://googleapis.com > /usr/local/bin/repo
-        dos2unix /usr/local/bin/repo
-        chmod a+x /usr/local/bin/repo
+        mkdir -p ~/bin
+        curl https://googleapis.com > ~/bin/repo
+        chmod a+x ~/bin/repo
 
     - name: Initialize Evolution X Source
       run: |
-        mkdir -p /github/workspace/android_build
-        cd /github/workspace/android_build
+        mkdir -p ~/workspace
+        cd ~/workspace
         git config --global user.name "BroodSnake659"
         git config --global user.email "broodsnake@example.com"
-        /usr/local/bin/repo init -u https://github.com -b eleven --git-lfs
+        python3 ~/bin/repo init -u https://github.com -b eleven --git-lfs
 
     - name: Clone Lime Device Trees
       run: |
-        cd /github/workspace/android_build
+        cd ~/workspace
         git clone https://github.com -b eleven device/xiaomi/lime || true
 
     - name: Set up CCache Engine
@@ -55,7 +57,7 @@ jobs:
 
     - name: Compile Evolution X ROM
       run: |
-        cd /github/workspace/android_build
+        cd ~/workspace
         . build/envsetup.sh
         lunch evolution_lime-userdebug || lunch lineage_lime-userdebug
         mka bacon -j$(nproc --all)
@@ -64,4 +66,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: EvolutionX-Lime-Android11-Flashable
-        path: /github/workspace/android_build/out/target/product/lime/*.zip
+        path: ~/workspace/out/target/product/lime/*.zip
