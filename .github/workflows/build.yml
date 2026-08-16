@@ -6,36 +6,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
+      options: --privileged
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-
-    - name: Clean Up Disk Space
+    - name: Set up Environment and Prerequisites
       run: |
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /opt/ghc
-        sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-    - name: Install Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y tzdata
+        apt-get install -y \
           git-lfs gnupg flex bison gperf squashfs-tools build-essential \
           zip curl ccache zlib1g-dev openjdk-11-jre openjdk-11-jdk \
           pngcrush schedtool libxml2 libxml2-utils xsltproc lzop \
           libc6-dev g++-multilib lib32z1-dev gcc-multilib maven tmux \
-          screen w3m ncftp rsync libssl-dev libncurses6 lib32ncurses6-dev \
-          libsdl2-dev libtinfo-dev bc libreadline-dev lib32readline-dev python3
+          screen w3m ncftp rsync libssl-dev libncurses5 lib32ncurses5-dev \
+          libsdl1.2-dev libtinfo-dev bc libreadline-dev lib32readline-dev python2 python3 python-is-python3
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
     - name: Install Repo Tool
       run: |
         mkdir -p ~/bin
         curl https://googleapis.com > ~/bin/repo
         chmod a+x ~/bin/repo
-        sudo ln -sf ~/bin/repo /usr/bin/repo
+        ln -sf ~/bin/repo /usr/bin/repo
 
     - name: Initialize Evolution X Source
       run: |
@@ -43,7 +40,7 @@ jobs:
         cd ~/workspace
         git config --global user.name "BroodSnake659"
         git config --global user.email "broodsnake@example.com"
-        repo init -u https://github.com/Evolution-X/manifest -b eleven --git-lfs
+        repo init -u https://github.com -b eleven --git-lfs
 
     - name: Clone Lime Device Trees
       run: |
