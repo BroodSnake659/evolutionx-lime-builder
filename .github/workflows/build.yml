@@ -22,7 +22,7 @@ jobs:
           pngcrush schedtool libxml2 libxml2-utils xsltproc lzop \
           libc6-dev g++-multilib lib32z1-dev gcc-multilib maven tmux \
           screen w3m ncftp rsync libssl-dev libncurses5 lib32ncurses5-dev \
-          libsdl1.2-dev libtinfo-dev bc libreadline-dev lib32readline-dev python2 python3 python-is-python3
+          libsdl1.2-dev libtinfo-dev bc libreadline-dev lib32readline-dev python2 python3 python-is-python3 dos2unix
 
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -31,6 +31,7 @@ jobs:
       run: |
         mkdir -p ~/bin
         curl https://googleapis.com > ~/bin/repo
+        dos2unix ~/bin/repo
         chmod a+x ~/bin/repo
         ln -sf ~/bin/repo /usr/bin/repo
 
