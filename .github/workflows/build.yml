@@ -1,4 +1,4 @@
-name: Evolution X Lime Builder
+name: Evolution X Lime Builder (Android 11)
 
 on:
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
           pngcrush schedtool libxml2 libxml2-utils xsltproc lzop \
           libc6-dev g++-multilib lib32z1-dev gcc-multilib maven tmux \
           screen w3m ncftp rsync libssl-dev libncurses6 lib32ncurses6-dev \
-          libsdl2-dev libtinfo-dev bc libreadline-dev lib32readline-dev
+          libsdl2-dev libtinfo-dev bc libreadline-dev lib32readline-dev python3
 
     - name: Install Repo Tool
       run: |
@@ -43,12 +43,12 @@ jobs:
         cd ~/workspace
         git config --global user.name "BroodSnake659"
         git config --global user.email "broodsnake@example.com"
-        repo init -u https://github.com/Evolution-X/manifest -b bq2 --git-lfs
+        repo init -u https://github.com/Evolution-X/manifest -b eleven --git-lfs
 
     - name: Clone Lime Device Trees
       run: |
         cd ~/workspace
-        git clone https://github.com -b bq2 device/xiaomi/sm8450-common || true
+        git clone https://github.com -b eleven device/xiaomi/lime || true
 
     - name: Set up CCache Engine
       run: |
@@ -60,11 +60,11 @@ jobs:
       run: |
         cd ~/workspace
         . build/envsetup.sh
-        lunch lineage_lime-userdebug || lunch evolution_lime-userdebug
-        m evolution -j$(nproc --all)
+        lunch evolution_lime-userdebug || lunch lineage_lime-userdebug
+        mka bacon -j$(nproc --all)
 
     - name: Upload Flashable ROM Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: EvolutionX-Lime-Flashable
+        name: EvolutionX-Lime-Android11-Flashable
         path: ~/workspace/out/target/product/lime/*.zip
