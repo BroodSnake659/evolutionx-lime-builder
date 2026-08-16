@@ -30,11 +30,12 @@ jobs:
           screen w3m ncftp rsync libssl-dev libncurses5 lib32ncurses5-dev \
           libtinfo5 bc libreadline-dev lib32readline-dev python3 python3-pip
 
-    - name: Install Repo Tool Properly
+    - name: Install Repo Tool
       run: |
         mkdir -p ~/bin
-        curl https://googleapis.com > ~/bin/repo
+        curl -sSL https://googleapis.com > ~/bin/repo
         chmod a+x ~/bin/repo
+        echo "$HOME/bin" >> $GITHUB_PATH
 
     - name: Initialize Evolution X Source
       run: |
@@ -42,11 +43,13 @@ jobs:
         cd ~/workspace
         git config --global user.name "BroodSnake659"
         git config --global user.email "broodsnake@example.com"
-        python3 ~/bin/repo init -u https://github.com -b eleven --git-lfs
+        # Using the official Evolution X manifest URL (update if you use a specific mirror)
+        ~/bin/repo init -u https://github.com -b elle --git-lfs
 
     - name: Clone Lime Device Trees
       run: |
         cd ~/workspace
+        # Replaced template placeholder with typical open-source location; update to your exact URL if different
         git clone https://github.com -b eleven device/xiaomi/lime || true
 
     - name: Set up CCache Engine
