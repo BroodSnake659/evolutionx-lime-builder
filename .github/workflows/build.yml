@@ -1,0 +1,66 @@
+name: Evolution X Lime Builder
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Free Up Disk Space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+
+    - name: Set up Build Environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.1-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
+
+    - name: Install Repo Tool
+      run: |
+        mkdir -p ~/bin
+        curl https://googleapis.com > ~/bin/repo
+        chmod a+x ~/bin/repo
+        sudo ln -sf ~/bin/repo /usr/bin/repo
+
+    - name: Initialize Evolution X Source
+      run: |
+        mkdir android && cd android
+        git config --global user.name "BroadSnake659"
+        git config --global user.email "git@github.com"
+        repo init -u https://github.com -b udc --git-lfs --depth=1
+
+    - name: Clone Lime Device Trees
+      run: |
+        cd android
+        git clone https://github.com -b udc device/xiaomi/lime
+        git clone https://github.com -b udc kernel/xiaomi/lime
+        git clone https://github.com -b udc vendor/xiaomi/lime
+
+    - name: Set up CCache Engine
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        max-size: "50G"
+        key: lime-evolution-ccache
+
+    - name: Compile Evolution X ROM
+      run: |
+        cd android
+        source build/envsetup.sh
+        export USE_CCACHE=1
+        export CCACHE_EXEC=/usr/bin/ccache
+        ccache -M 50G
+        lunch evolution_lime-userdebug
+        m evolution -j$(nproc --all)
+
+    - name: Upload Flashable ROM Artifact
+      uses: actions/artifacts-uploader@v1
+      with:
+        name: EvolutionX-Lime-Build
+        path: android/out/target/product/lime/evolution_*.zip
