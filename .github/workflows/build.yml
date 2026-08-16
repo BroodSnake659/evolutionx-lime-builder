@@ -60,7 +60,7 @@ jobs:
         m evolution -j$(nproc --all)
 
     - name: Upload Flashable ROM Artifact
-      uses: actions/artifacts-uploader@v1
+      uses: actions/upload-artifact@v4
       with:
         name: EvolutionX-Lime-Build
         path: android/out/target/product/lime/evolution_*.zip
